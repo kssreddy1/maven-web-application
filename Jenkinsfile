@@ -1,4 +1,4 @@
-node
+node ('Built-In Node')
 {	
 
 def mavenHome = tool name: "maven3.8.4"	
