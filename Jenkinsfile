@@ -3,27 +3,27 @@ node
 
 def mavenHome = tool name: "maven3.8.4"	
 
-	stage('CheckoutCode')
+    	stage('CheckoutCode')
 	{
 	git branch: 'development', credentialsId: 'c116bb27-dffb-4587-8a20-eaea162ec57a', url: 'https://github.com/samba7989893459/maven-web-application.git'
 	}
     
-    stage('Build')
+   	 stage('Build')
 	{
 	sh "${mavenHome}/bin/mvn clean package"
 	}
-
-    stage('ExecuteSonarQubeReport')
+	
+    	stage('ExecuteSonarQubeReport')
 	{
 	sh "${mavenHome}/bin/mvn sonar:sonar"
 	}
-
-    stage('UploadArtifactIntoNexus')
+	/*
+    	stage('UploadArtifactIntoNexus')
 	{
 	sh "${mavenHome}/bin/mvn deploy"
 	}
 
-    stage('DepolyAppIntoTomcat')
+    	stage('DepolyAppIntoTomcat')
 	{
 	sshagent(['25499363-b890-49ce-aed5-458082dec390']) 
 	{
@@ -40,4 +40,5 @@ def mavenHome = tool name: "maven3.8.4"
 	7989893459''', cc: 'samba81424.sr@gmail.com', from: '', replyTo: '', subject: 'Build Over', to: 'samba7989.sr@gmail.com'
 	}
 	
+	*/
 }
