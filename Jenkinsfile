@@ -2,7 +2,7 @@ node
 {	
 
 def mavenHome = tool name: "maven3.8.4"	
-properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '5', numToKeepStr: '')), pipelineTriggers([pollSCM('* * * * *')])])
+	properties([[$class: 'JiraProjectproperty'], buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '5', numToKeepStr: '')), pipelineTriggers([pollSCM('* * * * *')])])
 
     	stage('CheckoutCode')
 	{
