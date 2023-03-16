@@ -1,0 +1,234 @@
+Auto-Scaling
+-------------
+1. Create VPC
+2. Create 4 Subnets.
+	--> Two Subnets for ALB in Different Regions.
+	--> Two Subnets for APPLICATION, no prefernce Regions.
+3. Create Internet Gateway Attach to VPC.
+4. By Default one Route Table will Create and Edit the Routes Attach the Internet Gateway.
+
+5. Create LoadBalancer
+----------------------
+STEP:-1 CONFIGURE LOAD BALANCER
+---------------------------------
+--> Select Application Load Balancer
+--> Name of Load Balancer
+--> Select Scheme = Internet Facing
+	**Internet Facing Means Public
+	**Internal Means Private
+--> Select Default Listners
+--> Select Created VPC
+--> Select Two Subnets that we are created under VPC.
+--> Don't Select Any Add on-Services
+
+STEP:-2 CONFIGURE SECURITY SETTINGS
+-----------------------------------
+--> It shows Improve Your Load Balancer Security
+
+STEP:-3 CONFIGURE SECURITY GROUP
+--------------------------------
+--> Create Security Group
+	--> Type = Custom TCP
+	--> Port = 80
+	--> Source = Anywhere IPv4
+
+STEP:-4 CONFIGURE ROUTING
+-------------------------
+--> Select Create New Target Group
+--> Name of the Target Group
+--> Select Target Type = Instance
+--> Protocol = HTTP
+--> Port = 80
+--> Protocol Version = HTTP1
+--> Configure Health Checks 
+	--> Protocol = HTTP
+	--> Path = /app1/index.html
+--> Configure Advanced Health Check Settings
+	--> Port = Traffic Port 
+*Healthy threshold:- It defines the number of consecutive health check successes before declaring an EC2 instance healthy.
+	--> Healthy Thresholds =5
+*Unhealthy threshold:- It defines the number of consecutive health check failures before declaring an EC2 instance unhealthy.
+	--> UnHealthy Thresholds = 2
+*Timeout:- It defines how long it will take and waits for the response.
+	--> Timeout = 30 seconds
+*Interval: It is the amount of time b/w health check.
+	--> Intervel = 60 seconds
+	--> Success Code = 200
+
+STEP:-5 REGISTER TARGET
+-----------------------
+--> Select Instance here which is running
+--> Write know i am Not having active instances leave it as a optional.
+
+STEP:-6 REVIEW AND CREATE
+--------------------------
+--> Click on Review and Create
+--> Click on Close
+
+--> Goto Load Balancer dashboard and it shows created Load Balancer.
+--> Select the Created Load Balancer 
+--> It shows DNS Name and Copy the DNS Name
+--> Goto Browser and Search for "DNS CHECKER" 
+--> Paste the DNS Name in "DNS Checker".
+--> It shows Regions with IP address 
+--> It will show 2 IP addresses.
+
+6. To Creating Auto Scaling We need AMI 
+7. For AMI I will Launch one Server with name "Cookie-Cutter" and install one application in "Cookie-Cutter" Server.
+
+8. Creating Ec2-Instance.
+-------------------------
+--> Give Name of the Instance = Cookie-Cutter 
+--> Select AMI = Amazon Linux
+--> Select Instance Type = t2.micro
+--> Select VPC = auto-scaling VPC
+--> Select Subnet = Alb Subnet1
+--> Auto-assign Public-IP = Enable
+--> Storage = Defualt 8GB
+--> Security Group Name = Coockie-Cutter-asg
+--> Add New Rule = Custom TCP, Port = 80, Source = AnywhereIPv4
+--> Select Keypair
+--> Finally Click on Create Instance.
+--> Connect Instance using Terminal putty
+--> Shift root user
+	--> sudo -i
+--> Update the Server using
+	--> yum update -y
+--> Install the application "httpd"
+	-->yum install httpd -y
+--> Change the directory to html
+	--> cd /var/www/html
+--> Create a Directory
+	--> mkdir app1
+--> Change the directory 
+	--> cd app1
+--> Create new file called index.html
+	--> vi index.html
+<html>
+	<h1> Welcome to Application 1, ELB Path based routing is working </h1>
+</html>
+--> Come back to html directory --> cd ..
+--> Restart the httpd server using
+	--> systemctl httpd start
+--> Know copy the IP address of Instance and Paste in Browser you will get "Test Page".
+	--> Public IP
+--> If you want get Data which we have stored in Index.html
+	--> Public IP/app1
+--> To start automatically httpd server when we stop andf start the Instance.
+	--> chkconfig httpd on
+
+9. Creating AMI
+----------------
+--> Select the Cookie-Cutter Instance and Click on Actions
+--> Click on Image and Templates and click on create Image.
+	--> Image Name = Application1
+	--> Image Description = Application1
+	--> Click on NO Reboot
+--> Finally Click on Create Image.
+--> On Left Side Pane it shows AMI's and Click on That.
+--> It shows created Image Here.
+--> Know Go to Terminal and remove the app1 directory from html directory.
+--> Create New Directory called "app2" and change to app2 directory
+--> Create File "Index.html" in app2 directory
+<html>
+<h1> Hello from Application 2, Thanks for Testing </h1>
+</html>
+--> Save the File and Restart the httpd
+--> Go and search in Web Browser using public ip
+	--> public ip/app2
+--> Create AMI2 from this Cooki-Cutter 
+	--> Image Name = Application2
+	--> Image Description = Application2
+	--> Click on NO Reboot
+--> Finally Click on Create Image.
+--> Finally Two AMIs is created.
+--> Teriminate the Cookie-Cutter Instance.
+
+10. Launch Configurations
+-------------------------
+--> Name = Application1 -Launch Config
+--> Select AMIs = Application1
+--> Instance Type = t2.micro
+--> Security Group = Add Rule 
+	--> Type = Custom TCP 
+	--> Port = 80
+	--> Source = AnywhereIPv4
+--> Select the Key pair with you launch Instances.
+--> Finally Click on Laucnh Configuration
+--> Do the same process of Laucnh Configurations using Application2 AMI.
+
+11. Auto-Scaling Groups
+-----------------------
+--> Click on Create Auto-Scaling Group
+--> Name of the Group = Application1-asg
+--> Select the Launch Configuartion = Application1
+--> Select the Auto-Scaling VPC
+--> Select the App1-Subnet
+--> Select the Attach Existing Load Balancer
+--> Choose from your load balancer target groups
+--> Select target group = app1-tg
+--> Health Check Type = Select ELB
+--> Health Grace Period = 300 Seconds
+{Suppose if your CPU Utilization is reached the threshold value like maximum Utilization the auto scaling wait for somtime to check whether that cpu utilization is optimized or not.}
+--> Group Size
+	--> Desired Capacity = 2
+{When you are launching autoscaling group how many instnaces you want}
+	--> Minimun Capacity = 1
+{When you don't required instances you can keep upto one isntance minimum}
+	--> Maximum Capacity = 5 
+{When you increase the instances capacity you can increase maximum upto 5 instances}
+
+--> Select the Scaling Policies = Target tracking scaling policy
+	--> Scaling policy Name = Target Tracking Policy
+	--> Metric Type = average CPU Utilization
+	--> Target Value = 70
+	--> Instance Need = 300 Seconds
+--> Click on Add Tags to get Instances name will create using this names.
+	Name = Application1
+--> Review and Create Auto-Scaling Group.
+
+--> Finally Check the Instances will create automatically beacuase we have given Desired Capacity is 2.
+
+--> Go to Load balancer and Copy the DNS name and Search in Web page.
+--> First It shows Test Page
+--> After that we have given /app1 it shows data inside the APP1.
+
+Successfully Launched Auto-Scaling Group for app1-AMI
+
+App2 Process
+----------------
+1. Do the Same Process of Target Group as above Written.
+2. In target Group it shows app1.tg attached with alb=load balancer.
+3. But app2-tg is not attached for that we have to create load balancer.
+4. But, In this case we are directly attaching app2-tg in alb-loadbalancer listners.
+5. Go to Load Balancer and Select Load Balancer and Click on Listeners.
+6. Click on "View/edit Rule" 
+7. Click on "+" symbol 
+8. Click on Insert Role
+9. Click on Add Condition and Select Path and Give the path = /app1/*
+10. Click on Add action and Select forward to and Give app1-tg.
+11. Click on save Rule.
+12 Do the same process for App2.
+	--> Click on Insert Role
+	--> Click on Add Condition and Select Path and Give the path = /app2/*
+	--> Click on Add action and Select forward to and Give app2-tg.
+	--> Click on save Rule.
+13. know refresh DNS Name with app1  it will show Data.
+14. But In place of app1 give app2 it shows "Not Found"
+15. Create 2nd Launch Configuration 
+16. Click on Create Autoscaling Group 
+	--> Name of Auto-scaling = app2-asg
+17 Do the Same the above Process.
+
+
+
+
+
+ 
+
+
+
+
+
+
+
