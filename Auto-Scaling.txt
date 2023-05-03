@@ -1,5 +1,5 @@
-Auto-Scaling Installation
-----------------------------
+Auto-Scaling
+-------------
 1. Create VPC
 2. Create 4 Subnets.
 	--> Two Subnets for ALB in Different Regions.
